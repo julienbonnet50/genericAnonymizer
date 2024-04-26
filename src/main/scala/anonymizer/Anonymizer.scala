@@ -1,5 +1,8 @@
 package anonymizer
 
+
+import java.security.Timestamp
+
 object Anonymizer extends Serializable {
 
     import org.apache.commons.codec.digest.DigestUtils
@@ -18,7 +21,7 @@ object Anonymizer extends Serializable {
     var sha256KeepSourceLength: Boolean = true
     var sha256MinLength: Int = 8
     var excludeColNames: Seq[String] = Seq()
-    var excludeTypeNames: Seq[String] = Seq()
+    var excludeTypesNames: Seq[String] = Seq()
 
     def generateKeyFactor(): Double = {
         val r = new scala.util.Random()
@@ -93,14 +96,14 @@ object Anonymizer extends Serializable {
     }
 
     private def anonymizeArrayType(values: Seq[Any], elementType: DataType): Seq[Any] = {
-        value.map(value => anonymizeDataType(values, elementType))
+        values.map(value => anonymizeDataType(value, elementType))
     }
 
-    private def anonymizeMapType(values: Map[Any, Any], elementType: DataType): Map[Any, Any] = {
+    private def anonymizeMapType(values: Map[Any, Any], keyType: DataType, valueType: DataType): Map[Any, Any] = {
         values.map { case(key, value) => anonymizeDataType(key, keyType) -> anonymizeDataType(value, valueType)}
     }
 
-    private def anonymizeStructType(values: Row, schema: StructType): Row = {
+    private def anonymizeStructType(value: Row, schema: StructType): Row = {
         Row.fromSeq(schema
         .fields
         .zipWithIndex
@@ -115,13 +118,47 @@ object Anonymizer extends Serializable {
 
     private def anonymizeDataType(value: Any, dataType: DataType): Any = {
         if (value == null) return null
-        if (excludeTypeNames.contains(dataType.typeName)) return value
+        if (excludeTypesNames.contains(dataType.typeName)) return value
         dataType match {
             /* Numeric types */
             case ByteType => anonymizeByteType(value.asInstanceOf[Byte])
-            case ShortType => anonymizeByteType(value.asInstanceOf[ShortType])
-            case
+            case ShortType => anonymizeShortType(value.asInstanceOf[Short])
+            case IntegerType => anonymizeIntegerType(value.asInstanceOf[Int])
+            case LongType => anonymizeLongType(value.asInstanceOf[Long])
+            case FloatType => anonymizeFloatType(value.asInstanceOf[Float])
+            case DoubleType => anonymizeDoubleType(value.asInstanceOf[Double])
+            case _: DecimalType => anonymizeDecimalType(value.asInstanceOf[Decimal])
+
+            /* String types */
+            case StringType => anonymizeStringType(value.asInstanceOf[String])
+            case _: VarcharType => anonymizeVarcharType(value.asInstanceOf[String])
+            case _: CharType => anonymizeCharType(value.asInstanceOf[String])
+
+            /* Binary types */
+            case BinaryType => anonymizeBinaryType(value.asInstanceOf[Array[Byte]])
+            
+            /* Boolean types */
+            case BooleanType => anonymizeBooleanType()
+
+            /* TODO: Date types */
+            case DateType => value
+            case TimestampType => value 
+
+            /* TODO: Interval types */
+            case _: YearMonthIntervalType => value
+            case _: DayTimeIntervalType => value
+            
+            /* Complex types */
+            case t: ArrayType => anonymizeArrayType(value.asInstanceOf[Seq[Any]], t.elementType)
+            case t: MapType => anonymizeMapType(value.asInstanceOf[Map[Any, Any]], t.keyType, t.valueType)
+            case t: StructType => anonymizeStructType(value.asInstanceOf[Row], t)
+
+            case _ => value
         }
+    }
+
+    def anonymizeRow(row: Row): Row = {
+        anonymizeDataType(row, row.schema).asInstanceOf[Row]
     }
 }
 
