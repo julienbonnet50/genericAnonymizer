@@ -1,7 +1,3 @@
-package anonymizer
-
-println("Loadgin conf")
-
 val confArray = Array(
     /* Principal setting */
     "--source-basepath", "pathTo/datasetToGenerate",

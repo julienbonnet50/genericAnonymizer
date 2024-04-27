@@ -1,6 +1,5 @@
 package anonymizer
 
-
 import java.security.Timestamp
 
 object Anonymizer extends Serializable {
