@@ -1,6 +1,5 @@
 package anonymizer
 
-import anonymizer.Anonymizer
 import java.beans.Expression
 
 object AnonymizerApp {

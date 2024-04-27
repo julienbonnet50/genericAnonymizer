@@ -1,3 +1,7 @@
+package anonymizer
+
+println("Loadgin conf")
+
 val confArray = Array(
     /* Principal setting */
     "--source-basepath", "pathTo/datasetToGenerate",
@@ -11,5 +15,5 @@ val confArray = Array(
     "--anonymizer-byte-key-factor", 1,
     "--anonymizer-short-key-factor", 1,
     "--anonymizer-integer-key-factor", 1,
-    "--anonymizer-long-key-factor", 1,
+    "--anonymizer-long-key-factor", 1
 )
