@@ -5,3 +5,8 @@
 /conf/
 
 /target/
+
+
+# Folder to read / write
+/anonymizedDataset/*
+/datasetToAnonymize/*

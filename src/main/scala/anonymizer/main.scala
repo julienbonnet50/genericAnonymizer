@@ -1,3 +1,3 @@
-package anonymizer
+AnonymizerApp.init(confArray)
 
-AnonymizerApp.main(confArray)
+AnonymizerApp.main()
