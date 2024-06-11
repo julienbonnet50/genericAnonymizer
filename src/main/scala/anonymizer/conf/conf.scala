@@ -1,8 +1,8 @@
 val confArray: Array[String] = Array(
     /* Principal setting */
-    "--source-basepath", "pathTo/datasetToGenerate",
+    "--source-path", "pathTo/datasetToGenerate",
     // "--source-partition-filter", "lol",
-    "--target-basepath", "pathTo/generatedDataset",
+    "--target-path", "pathTo/generatedDataset",
     "--save-mode", "overwrite",
     "--compression", "gzip",
     "--output-format", "parquet"

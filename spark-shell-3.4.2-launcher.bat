@@ -3,7 +3,7 @@
 :: Assign all Path variables
 set "PATH=C:\Windows\System32"
 set "HOME=C:\{TODO: DEFINE}"
-
+set "PROJET=C:\{TODO: DEFINE}"
 :: Assign versions
 set "SPARK_VERSION={TODO: DEFINE}"
 set "JAVA_VERSION={TODO: DEFINE}"
@@ -18,7 +18,10 @@ set "PATH=%JAVA_HOME%\bin;%HADOOP_HOME%\bin;%SPARK_HOME%\bin;%PATH%"
 
 :: Run spark-shell
 spark-shell.cmd ^
-    -jars {TODO: DEFINE}\target\genericanonymizer-1.0-SNAPSHOT.jar ^
-    --name "Dataset Generic Generator" ^
-    ::--master local[8] ^
-    ::--driver-memory 6g
+    -i %PROJET%conf\conf.scala ^
+    -i %PROJET%src\main\scala\anonymizer\Anonymizer.scala ^
+    -i %PROJET%src\main\scala\anonymizer\AnonymizerApp.scala ^
+    -i %PROJET%src\main\scala\anonymizer\main.scala ^
+    --name "Generic Anonymizer" ^
+    --master local[8] ^
+    --driver-memory 6g

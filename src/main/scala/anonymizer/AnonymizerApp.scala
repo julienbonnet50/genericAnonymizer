@@ -12,6 +12,7 @@ object AnonymizerApp extends Serializable {
     private var sourceFormat = ""
     private var sourceDelimiter = ""
     private var sourcePath = ""
+    private var sourceHeader = ""
 
     var targetOptions = Map[String, String]()
     private var targetDelimiter = ""
@@ -29,20 +30,22 @@ object AnonymizerApp extends Serializable {
     def init(args: Array[String]): Unit = {
 
         @scala.annotation.tailrec
-        def nextArg(map: Map[String, Any], list: List[String]): Map[String, Any] = {
+        def nextArg(map: Map[String, Any], list: List[String]): Map[String, Any] = {            
             list match {
                 case Nil => map
                 /* Source */
                 case "--source-basepath" :: value :: tail =>
                 nextArg(map ++ Map("sourceBasePath" -> value), tail)
+                case "--source-path" :: value :: tail =>
+                nextArg(map ++ Map("sourcePath" -> value), tail)
                 case "--source-partition-filter" :: value :: tail =>
                 nextArg(map ++ Map("sourcePartitionFilter" -> value), tail)
                 case "--source-format" :: value :: tail =>
                 nextArg(map ++ Map("sourceFormat" -> value), tail)
                 case "--source-delimiter" :: value :: tail =>
                 nextArg(map ++ Map("sourceDelimiter" -> value), tail)
-                case "--source-path" :: value :: tail =>
-                nextArg(map ++ Map("sourcePath" -> value), tail)
+                case "--source-header" :: value :: tail =>
+                nextArg(map ++ Map("sourceHeader" -> value), tail)
 
                 /* Target */
                 case "--target-basepath" :: value :: tail =>
@@ -54,9 +57,11 @@ object AnonymizerApp extends Serializable {
                 case "--partition-by" :: value :: tail =>
                 nextArg(map ++ Map("partitionBy" -> value), tail)
                 case "--target-format" :: value :: tail =>
-                nextArg(map ++ Map("outputFormat" -> value), tail)
+                nextArg(map ++ Map("targetFormat" -> value), tail)
                 case "--target-path" :: value :: tail =>
                 nextArg(map ++ Map("targetPath" -> value), tail)
+                case "--target-delimiter" :: value :: tail =>
+                nextArg(map ++ Map("targetDelimiter" -> value), tail)
 
                 /* Anonymizer */
                 case "--anonymizer-byte-key-factor" :: value :: tail =>
@@ -107,11 +112,12 @@ object AnonymizerApp extends Serializable {
         sourceDelimiter = getOption("sourceDelimiter", "").asInstanceOf[String]
         sourcePath = getOption("sourcePath", "").asInstanceOf[String]
         sourcePartitionFilter = getOption("sourcePartitionFilter", "").asInstanceOf[String]
-
+        sourceHeader = getOption("sourceHeader", "").asInstanceOf[String]
 
         targetBasePath = getOption("targetBasePath", "").asInstanceOf[String]
         targetFormat = getOption("targetFormat", "parquet").asInstanceOf[String]
         targetDelimiter = getOption("targetDelimiter", ";").asInstanceOf[String]
+        targetPath = getOption("targetPath", "").asInstanceOf[String]
         saveMode = getOption("saveMode", "overwrite").asInstanceOf[String]
         compression = getOption("compression", "gzip").asInstanceOf[String]
         partitionBy = getOption("partitionBy", "").asInstanceOf[String]
@@ -135,34 +141,28 @@ object AnonymizerApp extends Serializable {
 
     def loadOptions(): Unit = {
         /* Source options */
-        if (!(sourceBasePath == "") || !(sourceBasePath.isEmpty) || !(sourceBasePath == null)) {
+        if (!(sourceBasePath == "")) {
             sourceOptions = sourceOptions ++ Map("basePath" -> sourceBasePath)
         } 
-        else if (!(sourceDelimiter == "") || !(sourceDelimiter.isEmpty) || !(sourceDelimiter == null)) {
+        if (!(sourceDelimiter == "")) {
             sourceOptions = sourceOptions ++ Map("delimiter" -> sourceDelimiter)
         } 
-        else if (!(sourcePath == "") || !(sourcePath.isEmpty) || !(sourcePath == null)) {
-            sourceOptions = sourceOptions ++ Map("path" -> sourcePath)
-        }
-        else if (!(sourceFormat == "") || !(sourceFormat.isEmpty) || !(sourceFormat == null)) {
-            sourceOptions = sourceOptions ++ Map("format" -> sourceFormat)
-        }
+        if (!(sourceHeader == "")) {
+            sourceOptions = sourceOptions ++ Map("header" -> sourceHeader)
+        } 
         
         /* Target options */
-        if (!(targetDelimiter == "") || !(targetDelimiter.isEmpty) || !(targetDelimiter == null)) {
+        if (!(targetDelimiter == "")) {
             targetOptions = targetOptions ++ Map("delimiter" -> targetDelimiter)
         }
-        else if (!(targetBasePath == "") || !(targetBasePath.isEmpty) || !(targetBasePath == null)) {
+        if (!(targetBasePath == "")) {
             targetOptions = targetOptions ++ Map("basePath" -> targetBasePath)
         }
-        else if (!(targetPath == "") || !(targetPath.isEmpty) || !(targetPath == null)) {
-            targetOptions = targetOptions ++ Map("path" -> targetPath)
-        }
-        else if (!(saveMode == "") || !(saveMode.isEmpty) || !(saveMode == null)) {
+        if (!(saveMode == "")) {
             targetOptions = targetOptions ++ Map("mode" -> saveMode)
         }
-        else if (!(targetFormat == "") || !(targetFormat.isEmpty) || !(targetFormat == null)) {
-            targetOptions = targetOptions ++ Map("format" -> targetFormat)
+        if (!(targetDelimiter == "")) {
+            sourceOptions = sourceOptions ++ Map("delimiter" -> sourceDelimiter)
         }
     }
 
@@ -174,15 +174,11 @@ object AnonymizerApp extends Serializable {
         println("source Options : " + sourceOptions)
         println("target Options : " + targetOptions)
         
-        val spark = SparkSession
-            .builder
-            .appName("Spark Generic Anonymizer")
-            .getOrCreate()
-        
         val partitionColumnNames = partitionBy.split(',')
 
         var df = spark
             .read
+            .format(sourceFormat)
             .options(sourceOptions)
             .load(sourcePath)
 
@@ -201,9 +197,18 @@ object AnonymizerApp extends Serializable {
                 .drop("__inner_repartition")
         }
 
+        println("target Format : " + targetFormat)
+
+        println("target Options : " + targetOptions)
+
+        println("target Path : " + targetPath)
+
+
         df
             .write
+            .format(targetFormat)
             .options(targetOptions)
+            .mode(saveMode)
             .save(targetPath)
 
     }  
