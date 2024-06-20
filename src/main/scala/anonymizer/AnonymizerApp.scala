@@ -244,7 +244,7 @@ object AnonymizerApp extends Serializable {
         if (!(encoding == "")) {
             sourceOptions = sourceOptions ++ Map("encoding" -> encoding)
         }
-        if (sourceHeader == "" && sourceHeader == "csv") {
+        if (sourceHeader == "" && sourceFormat == "csv") {
             sourceOptions = sourceOptions ++ Map("header" -> "true")
         }
         
@@ -264,7 +264,7 @@ object AnonymizerApp extends Serializable {
         if (!(encoding == "")) {
             targetOptions = targetOptions ++ Map("encoding" -> encoding)
         }
-        if (targetHeader == "" && targetHeader == "csv") {
+        if (targetHeader == "" && targetFormat == "csv") {
             targetOptions = targetOptions ++ Map("header" -> "true")
         }
     }
