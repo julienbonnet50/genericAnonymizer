@@ -58,6 +58,7 @@ Referential is written to keep numeric factor and metadata of anonymization
 {"conf":"sourcePath","value":"./sample/input/iris.json"}
 {"conf":"sourcePartitionFilter","value":""}
 {"conf":"sourceHeader","value":""}
+{"conf":"targetReferentialPath","value":"./sample/output/referential"}
 {"conf":"targetBasePath","value":""}
 {"conf":"targetFormat","value":"csv"}
 {"conf":"targetDelimiter","value":""}
@@ -81,3 +82,33 @@ Referential is written to keep numeric factor and metadata of anonymization
 {"conf":"Anonymizer.excludeColNames","value":"WrappedArray()"}
 {"conf":"Anonymizer.excludeTypeNames","value":"WrappedArray()"}
 ```
+
+
+## Documentation
+Most of the properties that control internal settings have reasonable default values. Some of the most common options to set are:
+
+
+| PropertyName                 | Default                        | Meaning                                                        | SinceVersion 
+| ----                         | --------                       | --------------                                                 | -------  
+| sourceFormat                 | json                           | File format of your source dataset                             | 0.1    
+| sourceBasePath               | (none)                         | Path of your spark basePath option                             | 0.1         
+| sourceDelimiter              | ,                              | Delimiter between columns (mainly for CSV)                     | 0.1      
+| sourcePath                   | ./sample/input/iris.json       | Path of your source dataset                                    | 0.1    
+| sourcePartitionFilter        | (none)                         | TODO                                                           | 0.1         
+| targetDelimiter              | ,                              | Delimiter between columns (mainly for CSV) of target dataset   | 0.1   
+| targetFormat                 | (none)                         | File format of your target dataset                             | 0.1    
+| targetBasePath               | (none)                         | Path of your spark basePath option of target dataset           | 0.1 
+| targetReferentialPath        | /sample/output/referential     | Path of referential                                            | 0.1     
+| encoding                     | (none)                         | Encoding value for spark option                                | 0.1     
+| compression                  | gzip                           | Compression value for spark option                             | 0.1
+| withInnerRepartition         | false                          | TODO                                                           | 0.1
+| preSqlStatements             | SET sha256_one = sha256('one') | SQL statements to execute before anonymization                 | 0.1  
+| innerRepartitionExpr         | (none)                         | TODO                                                           | 0.1     
+| saveMode                     | overwrite                      | File format for target saving                                  | 0.1         
+| Anonymizer.byteKeyFactor     | 1                              | Random number key factor for anonymizer                        | 0.1   
+| Anonymizer.shortKeyFactor    | 1                              | Random number key factor for anonymizer                        | 0.1 
+| Anonymizer.integerKeyFactor  | 1                              | Random number key factor for anonymizer                        | 0.1 
+| Anonymizer.longKeyFactor     | 1                              | Random number key factor for anonymizer                        | 0.1 
+| Anonymizer.fLoatKeyFactor    | 1                              | Random number key factor for anonymizer                        | 0.1 
+| Anonymizer.doubleKeyFactor   | 1                              | Random number key factor for anonymizer                        | 0.1 
+| Anonymizer.decimalKeyFactor  | 1                              | Random number key factor for anonymizer                        | 0.1 

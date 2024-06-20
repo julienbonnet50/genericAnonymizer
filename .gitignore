@@ -1,12 +1,15 @@
+# Ignore vscode lib dir
 /.bloop/
 /.metals/
 /.vscode/
-/genericanonymizer/
+
+# Ignore dev conf dir
 /conf/
 
+# Ignore target dir
 /target/
-
 
 # Folder to read / write
 /anonymizedDataset/*
 /datasetToAnonymize/*
+/sample/output/**

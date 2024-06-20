@@ -181,12 +181,14 @@ object AnonymizerApp extends Serializable {
         import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
         val attributeSeq = List(
+            List("filename", filename),
             List("sourceBasePath", sourceBasePath.toString),
             List("sourceFormat", sourceFormat.toString),
             List("sourceDelimiter", sourceDelimiter.toString),
             List("sourcePath", sourcePath.toString),
             List("sourcePartitionFilter", sourcePartitionFilter.toString),
             List("sourceHeader", sourceHeader.toString),
+            List("targetReferentialPath", targetReferentialPath.toString),
             List("targetBasePath", targetBasePath.toString),
             List("targetFormat", targetFormat.toString),
             List("targetDelimiter", targetDelimiter.toString),
