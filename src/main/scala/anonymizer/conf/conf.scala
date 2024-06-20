@@ -2,15 +2,19 @@ val sourcePath                  = ""
 val sourceFormat                = ""
 val sourceDelimiter             = ""
 val sourceHeader                = ""
+val sourcePartitionFilter       = ""
 
 val targetPath                  = ""
 val targetSaveMode              = ""
 val targetFormat                = ""
 val targetDelimiter             = ""
+val targetHeader                = ""
+val targetReferentialPath       = ""
 
 val compression                 = "gzip"
 val partitionBy                 = ""
-val withInnerRepartition        = ""
+val encoding                    = ""
+val withInnerRepartition        = "true"
 val preSqlStatements            = "SET sha256_one = sha256('one')"
 val innerRepartitionExpr        = ""
 val sha256KeepSourceLength      = "true"
@@ -38,6 +42,8 @@ val confArray: Array[String] = Array(
     "--source-format", sourceFormat,
     "--source-delimiter", sourceDelimiter,
     "--source-header", sourceHeader,
+    "--source-partition-filter", sourcePartitionFilter,
+    "--encoding", encoding,
 
         /* Target */
     "--target-path", targetPath,
@@ -45,6 +51,8 @@ val confArray: Array[String] = Array(
     "--compression", compression,
     "--target-format", targetFormat,
     "--target-delimiter", targetDelimiter,
+    "--target-header", targetHeader,
+    "--target-referential-path", targetReferentialPath,
     "--partition-by", partitionBy,
 
     /* Anonymizer */
@@ -59,6 +67,10 @@ val confArray: Array[String] = Array(
     "--anonymizer-short-key-factor", shortKeyFactor,
     "--anonymizer-integer-key-factor", integerKeyFactor,
     "--anonymizer-long-key-factor", longKeyFactor,
+    "--anonymizer-short-key-factor", shortKeyFactor,
+    "--anonymizer-double-key-factor", doubleKeyFactor,
+    "--anonymizer-float-key-factor", floatKeyFactor,
+    "--anonymizer-decimal-key-factor", decimalKeyFactor,
     "--anonymizer-exclude-col-names", excludeColNames,
     "--anonymizer-exclude-type-names", excludeTypeNames
 )

@@ -19,6 +19,8 @@ object AnonymizerApp extends Serializable {
     private var targetBasePath = ""
     private var targetFormat = ""
     private var targetPath = ""
+    private var targetHeader = ""
+    private var targetReferentialPath = ""
 
     private var encoding = ""
     private var saveMode = ""
@@ -27,6 +29,7 @@ object AnonymizerApp extends Serializable {
     private var withInnerRepartition = false
     private var preSqlStatements = Seq[String]()
     private var innerRepartitionExpr = ""
+    private var filename = ""
 
     def init(args: Array[String]): Unit = {
 
@@ -65,6 +68,11 @@ object AnonymizerApp extends Serializable {
                 nextArg(map ++ Map("targetDelimiter" -> value), tail)
                 case "--encoding" :: value :: tail =>
                 nextArg(map  ++ Map("encoding" -> value), tail)
+                case "--target-referential-path" :: value :: tail =>
+                nextArg(map ++ Map("targetReferentialPath" -> value), tail)
+                case "--target-header" :: value :: tail =>
+                nextArg(map ++ Map("targetHeader" -> value), tail)
+
 
                 /* Anonymizer */
                 case "--anonymizer-byte-key-factor" :: value :: tail =>
@@ -129,6 +137,8 @@ object AnonymizerApp extends Serializable {
         targetFormat = getOption("targetFormat", "parquet").asInstanceOf[String]
         targetDelimiter = getOption("targetDelimiter", "").asInstanceOf[String]
         targetPath = getOption("targetPath", "").asInstanceOf[String]
+        targetHeader = getOption("targetHeader", "").asInstanceOf[String]
+        targetReferentialPath = getOption("targetReferentialPath", "").asInstanceOf[String]
 
         encoding = getOption("encoding", "").asInstanceOf[String]
         saveMode = getOption("saveMode", "overwrite").asInstanceOf[String]
@@ -151,6 +161,75 @@ object AnonymizerApp extends Serializable {
         Anonymizer.excludeTypeNames = getOption("anonymizerExcludeTypeNames", Anonymizer.excludeTypeNames).asInstanceOf[Seq[String]]
     }
 
+    def setFilename(): Unit = {
+        import java.time.LocalDateTime
+        import java.time.format.DateTimeFormatter
+        import scala.util.matching.Regex
+
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+        val regex = new Regex("([^/]+)+$")
+        val lastElement = regex.findFirstMatchIn(sourcePath).get.group(1)
+        val formattedDateTime = currentDateTime.format(formatter)
+
+        filename = s"$lastElement" + "_" + s"$formattedDateTime"
+
+    }
+
+    def writeReferential(): Unit = {
+        import org.apache.spark.sql.functions.struct
+        import org.apache.spark.sql.types.{StringType, StructField, StructType}
+
+        val attributeSeq = List(
+            List("sourceBasePath", sourceBasePath.toString),
+            List("sourceFormat", sourceFormat.toString),
+            List("sourceDelimiter", sourceDelimiter.toString),
+            List("sourcePath", sourcePath.toString),
+            List("sourcePartitionFilter", sourcePartitionFilter.toString),
+            List("sourceHeader", sourceHeader.toString),
+            List("targetBasePath", targetBasePath.toString),
+            List("targetFormat", targetFormat.toString),
+            List("targetDelimiter", targetDelimiter.toString),
+            List("targetPath", targetPath.toString),
+            List("encoding", encoding.toString),
+            List("saveMode", saveMode.toString),
+            List("compression", compression.toString),
+            List("partitionBy", partitionBy.toString),
+            List("withInnerRepartition", withInnerRepartition.toString),
+            List("preSqlStatements", preSqlStatements.toString),
+            List("innerRepartitionExpr", innerRepartitionExpr.toString),
+            List("Anonymizer.byteKeyFactor", Anonymizer.byteKeyFactor.toString),
+            List("Anonymizer.shortKeyFactor", Anonymizer.shortKeyFactor.toString),
+            List("Anonymizer.integerKeyFactor", Anonymizer.integerKeyFactor.toString),
+            List("Anonymizer.longKeyFactor", Anonymizer.longKeyFactor.toString),
+            List("Anonymizer.floatKeyFactor", Anonymizer.floatKeyFactor.toString),
+            List("Anonymizer.doubleKeyFactor", Anonymizer.doubleKeyFactor.toString),
+            List("Anonymizer.decimalKeyFactor", Anonymizer.decimalKeyFactor.toString),
+            List("Anonymizer.sha256KeepSourceLength", Anonymizer.sha256KeepSourceLength.toString),
+            List("Anonymizer.sha256MinLength", Anonymizer.sha256MinLength.toString),
+            List("Anonymizer.excludeColNames", Anonymizer.excludeColNames.toString),
+            List("Anonymizer.excludeTypeNames", Anonymizer.excludeTypeNames.toString)
+        )
+
+        val schema = StructType(
+            Seq(
+                StructField("conf", StringType, true),
+                StructField("value", StringType, true)
+            )
+        )
+
+        val rows = attributeSeq.map(attributes => Row(attributes(0).toString, attributes(1)))
+
+        val dfReferential = spark.createDataFrame(spark.sparkContext.parallelize(rows), schema)
+
+        dfReferential 
+            .repartition(1)
+            .write
+            .format("json")
+            .save(targetReferentialPath + "/" + filename + ".json")
+
+    }
+
     def loadOptions(): Unit = {
         /* Source options */
         if (!(sourceBasePath == "")) {
@@ -164,6 +243,9 @@ object AnonymizerApp extends Serializable {
         } 
         if (!(encoding == "")) {
             sourceOptions = sourceOptions ++ Map("encoding" -> encoding)
+        }
+        if (sourceHeader == "" && sourceHeader == "csv") {
+            sourceOptions = sourceOptions ++ Map("header" -> "true")
         }
         
         /* Target options */
@@ -182,12 +264,18 @@ object AnonymizerApp extends Serializable {
         if (!(encoding == "")) {
             targetOptions = targetOptions ++ Map("encoding" -> encoding)
         }
+        if (targetHeader == "" && targetHeader == "csv") {
+            targetOptions = targetOptions ++ Map("header" -> "true")
+        }
     }
 
     def main(): Unit = {
 
         println("Starting app ")
+
+        // Load conf
         loadOptions()
+        setFilename()
         
         val partitionColumnNames = partitionBy.split(',')
 
@@ -201,6 +289,11 @@ object AnonymizerApp extends Serializable {
         val encoder: ExpressionEncoder[Row] = RowEncoder.apply(df.schema).resolveAndBind()
 
         df = df.map(row => Anonymizer.anonymizeRow(row), encoder)
+
+        // Write referential
+        if (targetReferentialPath != "") {
+            writeReferential()
+        }
 
         if(withInnerRepartition) {
             spark.udf.register("sha256", udf((s: String) => Anonymizer.sha256(s)))
