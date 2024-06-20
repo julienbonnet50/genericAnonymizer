@@ -20,6 +20,7 @@ object AnonymizerApp extends Serializable {
     private var targetFormat = ""
     private var targetPath = ""
 
+    private var encoding = ""
     private var saveMode = ""
     private var compression = ""
     private var partitionBy = ""
@@ -62,6 +63,8 @@ object AnonymizerApp extends Serializable {
                 nextArg(map ++ Map("targetPath" -> value), tail)
                 case "--target-delimiter" :: value :: tail =>
                 nextArg(map ++ Map("targetDelimiter" -> value), tail)
+                case "--encoding" :: value :: tail =>
+                nextArg(map  ++ Map("encoding" -> value), tail)
 
                 /* Anonymizer */
                 case "--anonymizer-byte-key-factor" :: value :: tail =>
@@ -82,10 +85,18 @@ object AnonymizerApp extends Serializable {
                 nextArg(map ++ Map("anonymizerSha256KeepSourceLength" -> value.toBoolean), tail)
                 case "--anonymizer-sha256-min-length" :: value :: tail =>
                 nextArg(map ++ Map("anonymizerSha256MinLength" -> value.toInt), tail)
-                case "--anonymizer-exclude-col-name" :: value :: tail =>
-                nextArg(map ++ Map("anonymizerExcludeColName" -> value.split(',').map(_.trim).toSeq), tail)
-                case "--anonymizer-exclude-types-name" :: value :: tail =>
-                nextArg(map ++ Map("anonymizerExcludeTypesName" -> value.split(',').map(_.trim).toSeq), tail)
+                case "--anonymizer-exclude-col-names" :: value :: tail =>
+                nextArg(map ++ Map("anonymizerExcludeColNames" -> value.split(',').map(_.trim).toSeq), tail)
+                case "--anonymizer-exclude-type-names" :: value :: tail =>
+                nextArg(map ++ Map("anonymizerExcludeTypeNames" -> value.split(',').map(_.trim).toSeq), tail)
+
+                case "--with-inner-repartition" :: value :: tail =>
+                nextArg(map ++ Map("withInnerRepartition" -> value.toBoolean), tail)
+                case "--pre-sql-statements" :: value :: tail =>
+                nextArg(map ++ Map("preSqlStatements" -> value.split(';').map(_.trim).toSeq), tail)
+                case "--inner-repartition-expr" :: value :: tail =>
+                nextArg(map ++ Map("innerRepartitionExpr" -> value), tail)
+
                 case ("--") :: _ =>
                 map
                 case unknown :: _ =>
@@ -116,12 +127,13 @@ object AnonymizerApp extends Serializable {
 
         targetBasePath = getOption("targetBasePath", "").asInstanceOf[String]
         targetFormat = getOption("targetFormat", "parquet").asInstanceOf[String]
-        targetDelimiter = getOption("targetDelimiter", ";").asInstanceOf[String]
+        targetDelimiter = getOption("targetDelimiter", "").asInstanceOf[String]
         targetPath = getOption("targetPath", "").asInstanceOf[String]
+
+        encoding = getOption("encoding", "").asInstanceOf[String]
         saveMode = getOption("saveMode", "overwrite").asInstanceOf[String]
         compression = getOption("compression", "gzip").asInstanceOf[String]
         partitionBy = getOption("partitionBy", "").asInstanceOf[String]
-
         withInnerRepartition = getOption("withInnerRepartition", false).asInstanceOf[Boolean]
         preSqlStatements = getOption("preSqlStatements", Seq()).asInstanceOf[Seq[String]]
         innerRepartitionExpr = getOption("innerRepartitionExpr", "cast(rand() * 99 as int) % 3").asInstanceOf[String]
@@ -136,7 +148,7 @@ object AnonymizerApp extends Serializable {
         Anonymizer.sha256KeepSourceLength = getOption("anonymizerSha256KeepSourceLength", Anonymizer.sha256KeepSourceLength).asInstanceOf[Boolean]
         Anonymizer.sha256MinLength = getOption("anonymizerSha256MinLength", Anonymizer.sha256MinLength).asInstanceOf[Int]
         Anonymizer.excludeColNames = getOption("anonymizerExcludeColNames", Anonymizer.excludeColNames).asInstanceOf[Seq[String]]
-        Anonymizer.excludeTypesNames = getOption("anonymizerExcludeTypesNames", Anonymizer.excludeTypesNames).asInstanceOf[Seq[String]]
+        Anonymizer.excludeTypeNames = getOption("anonymizerExcludeTypeNames", Anonymizer.excludeTypeNames).asInstanceOf[Seq[String]]
     }
 
     def loadOptions(): Unit = {
@@ -150,6 +162,9 @@ object AnonymizerApp extends Serializable {
         if (!(sourceHeader == "")) {
             sourceOptions = sourceOptions ++ Map("header" -> sourceHeader)
         } 
+        if (!(encoding == "")) {
+            sourceOptions = sourceOptions ++ Map("encoding" -> encoding)
+        }
         
         /* Target options */
         if (!(targetDelimiter == "")) {
@@ -162,7 +177,10 @@ object AnonymizerApp extends Serializable {
             targetOptions = targetOptions ++ Map("mode" -> saveMode)
         }
         if (!(targetDelimiter == "")) {
-            sourceOptions = sourceOptions ++ Map("delimiter" -> sourceDelimiter)
+            targetOptions = targetOptions ++ Map("delimiter" -> sourceDelimiter)
+        }
+        if (!(encoding == "")) {
+            targetOptions = targetOptions ++ Map("encoding" -> encoding)
         }
     }
 
@@ -170,9 +188,6 @@ object AnonymizerApp extends Serializable {
 
         println("Starting app ")
         loadOptions()
-
-        println("source Options : " + sourceOptions)
-        println("target Options : " + targetOptions)
         
         val partitionColumnNames = partitionBy.split(',')
 
@@ -195,22 +210,26 @@ object AnonymizerApp extends Serializable {
             df = df.withColumn("__inner_repartition", expr(innerRepartitionExpr))
                 .repartition(withInnerRepartitionColumns: _*)
                 .drop("__inner_repartition")
+        } 
+
+        if (partitionBy != "") {
+            df  
+                .write
+                .format(targetFormat)
+                .options(targetOptions)
+                .mode(saveMode)
+                .partitionBy(partitionColumnNames: _*)
+                .save(targetPath)
         }
+        else {
+            df
+                .write
+                .format(targetFormat)
+                .options(targetOptions)
+                .mode(saveMode)
+                .save(targetPath)
 
-        println("target Format : " + targetFormat)
-
-        println("target Options : " + targetOptions)
-
-        println("target Path : " + targetPath)
-
-
-        df
-            .write
-            .format(targetFormat)
-            .options(targetOptions)
-            .mode(saveMode)
-            .save(targetPath)
-
+        }
     }  
     
 }

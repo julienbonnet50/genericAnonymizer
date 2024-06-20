@@ -18,10 +18,12 @@ set "PATH=%JAVA_HOME%\bin;%HADOOP_HOME%\bin;%SPARK_HOME%\bin;%PATH%"
 
 :: Run spark-shell
 spark-shell.cmd ^
-    -i %PROJET%conf\conf.scala ^
     -i %PROJET%src\main\scala\anonymizer\Anonymizer.scala ^
     -i %PROJET%src\main\scala\anonymizer\AnonymizerApp.scala ^
+    -i %PROJET%conf\conf.scala ^
     -i %PROJET%src\main\scala\anonymizer\main.scala ^
+    --conf "spark.hadoop.mapreduce.fileoutputcommitter.marksuccessfuljobs=false" ^
+    --conf "spark.hadoop.parquet.enable.summary-metadata=false" ^
     --name "Generic Anonymizer" ^
     --master local[8] ^
     --driver-memory 6g

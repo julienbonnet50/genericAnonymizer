@@ -18,7 +18,7 @@ object Anonymizer extends Serializable {
     var sha256KeepSourceLength: Boolean = true
     var sha256MinLength: Int = 8
     var excludeColNames: Seq[String] = Seq()
-    var excludeTypesNames: Seq[String] = Seq()
+    var excludeTypeNames: Seq[String] = Seq()
 
     def generateKeyFactor(): Double = {
         val r = new scala.util.Random()
@@ -115,7 +115,7 @@ object Anonymizer extends Serializable {
 
     private def anonymizeDataType(value: Any, dataType: DataType): Any = {
         if (value == null) return null
-        if (excludeTypesNames.contains(dataType.typeName)) return value
+        if (excludeTypeNames.contains(dataType.typeName)) return value
         dataType match {
             /* Numeric types */
             case ByteType => anonymizeByteType(value.asInstanceOf[Byte])
