@@ -47,3 +47,37 @@ petalLength,petalWidth,sepalLength,sepalWidth,species
 0.44150110375275936,0.0630715862503942,1.545253863134658,0.946073793755913,ef80075a
 0.4099653106275623,0.0630715862503942,1.4821822768842638,1.0091453800063073,ef80075a
 ```
+
+#### Sample of referential written 
+
+Referential is written to keep numeric factor and metadata of anonymization
+```json
+{"conf":"sourceBasePath","value":""}
+{"conf":"sourceFormat","value":"json"}
+{"conf":"sourceDelimiter","value":""}
+{"conf":"sourcePath","value":"./sample/input/iris.json"}
+{"conf":"sourcePartitionFilter","value":""}
+{"conf":"sourceHeader","value":""}
+{"conf":"targetBasePath","value":""}
+{"conf":"targetFormat","value":"csv"}
+{"conf":"targetDelimiter","value":""}
+{"conf":"targetPath","value":"./sample/output/iris.csv"}
+{"conf":"encoding","value":""}
+{"conf":"saveMode","value":"overwrite"}
+{"conf":"compression","value":"gzip"}
+{"conf":"partitionBy","value":""}
+{"conf":"withInnerRepartition","value":"false"}
+{"conf":"preSqlStatements","value":"WrappedArray(SET sha256_one = sha256('one'))"}
+{"conf":"innerRepartitionExpr","value":""}
+{"conf":"Anonymizer.byteKeyFactor","value":"2.133"}
+{"conf":"Anonymizer.shortKeyFactor","value":"1.976"}
+{"conf":"Anonymizer.integerKeyFactor","value":"2.797"}
+{"conf":"Anonymizer.longKeyFactor","value":"3.724"}
+{"conf":"Anonymizer.floatKeyFactor","value":"2.165"}
+{"conf":"Anonymizer.doubleKeyFactor","value":"3.171"}
+{"conf":"Anonymizer.decimalKeyFactor","value":"3.245"}
+{"conf":"Anonymizer.sha256KeepSourceLength","value":"true"}
+{"conf":"Anonymizer.sha256MinLength","value":"8"}
+{"conf":"Anonymizer.excludeColNames","value":"WrappedArray()"}
+{"conf":"Anonymizer.excludeTypeNames","value":"WrappedArray()"}
+```
