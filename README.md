@@ -89,7 +89,7 @@ Most of the properties that control internal settings have reasonable default va
 
 
 | PropertyName                 | Default                        | Meaning                                                        | SinceVersion 
-| ----                         | --------                       | --------------                                                 | -------  
+| :----                        | :--------:                     | :--------------:                                               | :-------:  
 | sourceFormat                 | json                           | File format of your source dataset                             | 0.1    
 | sourceBasePath               | (none)                         | Path of your spark basePath option                             | 0.1         
 | sourceDelimiter              | ,                              | Delimiter between columns (mainly for CSV)                     | 0.1      
