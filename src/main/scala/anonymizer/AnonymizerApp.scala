@@ -1,10 +1,18 @@
 import java.beans.Expression
+import org.apache.spark.sql.SparkSession
+
+
 
 object AnonymizerApp extends Serializable {
   
     import org.apache.spark.sql._
     import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
     import org.apache.spark.sql.functions._
+
+    val spark = SparkSession
+        .builder
+        .appName("generic Anonymizer")
+        .getOrCreate()
 
     var sourceOptions = Map[String, String]()
     private var sourceBasePath = ""
@@ -277,7 +285,7 @@ object AnonymizerApp extends Serializable {
     }
 
     def main(): Unit = {
-
+    
         println("Starting app ")
 
         // Load conf

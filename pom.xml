@@ -111,6 +111,15 @@
                 <arg>dependencyfile</arg>
                 <arg>${project.build.directory}/.scala_dependencies</arg>
               </args>
+              <sources>
+                <source>
+                  <directory>${project.basedir}/src/main/scala</directory>
+                  <excludes>
+                    <exclude>anonymizer/conf/conf.scala</exclude>
+                    <exclude>anonymizer/main.scala</exclude>
+                  </excludes>
+                </source>
+              </sources>
             </configuration>
           </execution>
         </executions>
