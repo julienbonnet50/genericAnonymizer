@@ -41,7 +41,7 @@ Ratios has been modifiated, and species values has been anonymized
 {"petalLength":0.5478297513695743,"petalWidth":0.08428150021070374,"sepalLength":1.9806152549515381,"sepalWidth":1.3485040033712599,"species":"ef80075a"}
 ```
 - Csv
-```json
+```bash
 petalLength,petalWidth,sepalLength,sepalWidth,species
 0.44150110375275936,0.0630715862503942,1.608325449385052,1.1037527593818985,ef80075a
 0.44150110375275936,0.0630715862503942,1.545253863134658,0.946073793755913,ef80075a
@@ -67,6 +67,7 @@ Referential is written to keep numeric factor and metadata of anonymization
 {"conf":"saveMode","value":"overwrite"}
 {"conf":"compression","value":"gzip"}
 {"conf":"partitionBy","value":""}
+{"conf":"partitionNum","value":"1"}
 {"conf":"withInnerRepartition","value":"false"}
 {"conf":"preSqlStatements","value":"WrappedArray(SET sha256_one = sha256('one'))"}
 {"conf":"innerRepartitionExpr","value":""}
@@ -101,6 +102,8 @@ Most of the properties that control internal settings have reasonable default va
 | targetReferentialPath        | /sample/output/referential     | Path of referential                                            | 0.1     
 | encoding                     | (none)                         | Encoding value for spark option                                | 0.1     
 | compression                  | gzip                           | Compression value for spark option                             | 0.1
+| partitionBy                  | (none)                         | Columns to parition your dataset                               | 0.1
+| partitionNum                 | 1                              | Value for spark target repartitioning                          | 0.1
 | withInnerRepartition         | false                          | TODO                                                           | 0.1
 | preSqlStatements             | SET sha256_one = sha256('one') | SQL statements to execute before anonymization                 | 0.1  
 | innerRepartitionExpr         | (none)                         | TODO                                                           | 0.1     
