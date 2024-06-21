@@ -26,6 +26,7 @@ object AnonymizerApp extends Serializable {
     private var saveMode = ""
     private var compression = ""
     private var partitionBy = ""
+    private var partitionNum = 1
     private var withInnerRepartition = false
     private var preSqlStatements = Seq[String]()
     private var innerRepartitionExpr = ""
@@ -60,6 +61,8 @@ object AnonymizerApp extends Serializable {
                 nextArg(map ++ Map("compression" -> value), tail)
                 case "--partition-by" :: value :: tail =>
                 nextArg(map ++ Map("partitionBy" -> value), tail)
+                case "--partition-num" :: value :: tail =>
+                nextArg(map ++ Map("partitionNum" -> value), tail)
                 case "--target-format" :: value :: tail =>
                 nextArg(map ++ Map("targetFormat" -> value), tail)
                 case "--target-path" :: value :: tail =>
@@ -144,6 +147,7 @@ object AnonymizerApp extends Serializable {
         saveMode = getOption("saveMode", "overwrite").asInstanceOf[String]
         compression = getOption("compression", "gzip").asInstanceOf[String]
         partitionBy = getOption("partitionBy", "").asInstanceOf[String]
+        partitionNum = getOption("partitionNum", 1).asInstanceOf[Int]
         withInnerRepartition = getOption("withInnerRepartition", false).asInstanceOf[Boolean]
         preSqlStatements = getOption("preSqlStatements", Seq()).asInstanceOf[Seq[String]]
         innerRepartitionExpr = getOption("innerRepartitionExpr", "cast(rand() * 99 as int) % 3").asInstanceOf[String]
@@ -197,6 +201,7 @@ object AnonymizerApp extends Serializable {
             List("saveMode", saveMode.toString),
             List("compression", compression.toString),
             List("partitionBy", partitionBy.toString),
+            List("partitionNum", partitionNum.toString),
             List("withInnerRepartition", withInnerRepartition.toString),
             List("preSqlStatements", preSqlStatements.toString),
             List("innerRepartitionExpr", innerRepartitionExpr.toString),
@@ -309,6 +314,7 @@ object AnonymizerApp extends Serializable {
 
         if (partitionBy != "") {
             df  
+                .repartition(partitionNum)
                 .write
                 .format(targetFormat)
                 .options(targetOptions)
@@ -318,6 +324,7 @@ object AnonymizerApp extends Serializable {
         }
         else {
             df
+                .repartition(partitionNum)
                 .write
                 .format(targetFormat)
                 .options(targetOptions)
