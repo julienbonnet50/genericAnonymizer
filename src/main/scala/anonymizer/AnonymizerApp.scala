@@ -29,6 +29,7 @@ object AnonymizerApp extends Serializable {
     private var targetPath = ""
     private var targetHeader = ""
     private var targetReferentialPath = ""
+    private var targetMaxRows = 0
 
     private var encoding = ""
     private var saveMode = ""
@@ -70,13 +71,15 @@ object AnonymizerApp extends Serializable {
                 case "--partition-by" :: value :: tail =>
                 nextArg(map ++ Map("partitionBy" -> value), tail)
                 case "--partition-num" :: value :: tail =>
-                nextArg(map ++ Map("partitionNum" -> value), tail)
+                nextArg(map ++ Map("partitionNum" -> value.toInt), tail)
                 case "--target-format" :: value :: tail =>
                 nextArg(map ++ Map("targetFormat" -> value), tail)
                 case "--target-path" :: value :: tail =>
                 nextArg(map ++ Map("targetPath" -> value), tail)
                 case "--target-delimiter" :: value :: tail =>
                 nextArg(map ++ Map("targetDelimiter" -> value), tail)
+                case "--target-max-rows" :: value :: tail =>
+                nextArg(map ++ Map("targetMaxRows" -> value.toInt), tail)
                 case "--encoding" :: value :: tail =>
                 nextArg(map  ++ Map("encoding" -> value), tail)
                 case "--target-referential-path" :: value :: tail =>
@@ -150,6 +153,7 @@ object AnonymizerApp extends Serializable {
         targetPath = getOption("targetPath", "").asInstanceOf[String]
         targetHeader = getOption("targetHeader", "").asInstanceOf[String]
         targetReferentialPath = getOption("targetReferentialPath", "").asInstanceOf[String]
+        targetMaxRows = getOption("targetMaxRows", 0).asInstanceOf[Int]
 
         encoding = getOption("encoding", "").asInstanceOf[String]
         saveMode = getOption("saveMode", "overwrite").asInstanceOf[String]
@@ -205,6 +209,7 @@ object AnonymizerApp extends Serializable {
             List("targetFormat", targetFormat.toString),
             List("targetDelimiter", targetDelimiter.toString),
             List("targetPath", targetPath.toString),
+            List("targetMaxRows", targetMaxRows.toString),
             List("encoding", encoding.toString),
             List("saveMode", saveMode.toString),
             List("compression", compression.toString),
@@ -284,42 +289,25 @@ object AnonymizerApp extends Serializable {
         }
     }
 
-    def main(): Unit = {
-    
-        println("Starting app ")
+    def readSource(): DataFrame = {
+        if (targetMaxRows > 0) {
+            spark
+                .read
+                .format(sourceFormat)
+                .options(sourceOptions)
+                .load(sourcePath)
+                .limit(targetMaxRows)
+        } else {
+            spark
+                .read
+                .format(sourceFormat)
+                .options(sourceOptions)
+                .load(sourcePath)
 
-        // Load conf
-        loadOptions()
-        setFilename()
-        
-        val partitionColumnNames = partitionBy.split(',')
-
-        var df = spark
-            .read
-            .format(sourceFormat)
-            .options(sourceOptions)
-            .load(sourcePath)
-
-        // Encoder
-        val encoder: ExpressionEncoder[Row] = RowEncoder.apply(df.schema).resolveAndBind()
-
-        df = df.map(row => Anonymizer.anonymizeRow(row), encoder)
-
-        // Write referential
-        if (targetReferentialPath != "") {
-            writeReferential()
         }
-
-        if(withInnerRepartition) {
-            spark.udf.register("sha256", udf((s: String) => Anonymizer.sha256(s)))
-            preSqlStatements.foreach(sql => spark.sql(sql))
-            val partitionColumns = partitionColumnNames.map(name => col(name))
-            val withInnerRepartitionColumns = partitionColumns :+ col("__inner_repartition")
-            df = df.withColumn("__inner_repartition", expr(innerRepartitionExpr))
-                .repartition(withInnerRepartitionColumns: _*)
-                .drop("__inner_repartition")
-        } 
-
+    }
+    
+    def writeTarget(df: DataFrame, partitionColumnNames: Array[String]): Unit = {
         if (partitionBy != "") {
             df  
                 .repartition(partitionNum)
@@ -338,8 +326,42 @@ object AnonymizerApp extends Serializable {
                 .options(targetOptions)
                 .mode(saveMode)
                 .save(targetPath)
-
         }
-    }  
+    }
+
+    def main(): Unit = {
     
+        println("Starting app ")
+
+        // Load conf
+        loadOptions()
+        setFilename()
+        val partitionColumnNames = partitionBy.split(',')
+
+        // Read source
+        var df = readSource()
+
+        // Anonymize source
+        val encoder: ExpressionEncoder[Row] = RowEncoder.apply(df.schema).resolveAndBind()
+        df = df.map(row => Anonymizer.anonymizeRow(row), encoder)
+
+        // Write referential
+        if (targetReferentialPath != "") {
+            writeReferential()
+        }
+
+        // Inner repartition
+        if(withInnerRepartition) {
+            spark.udf.register("sha256", udf((s: String) => Anonymizer.sha256(s)))
+            preSqlStatements.foreach(sql => spark.sql(sql))
+            val partitionColumns = partitionColumnNames.map(name => col(name))
+            val withInnerRepartitionColumns = partitionColumns :+ col("__inner_repartition")
+            df = df.withColumn("__inner_repartition", expr(innerRepartitionExpr))
+                .repartition(withInnerRepartitionColumns: _*)
+                .drop("__inner_repartition")
+        } 
+
+        // Write target 
+        writeTarget(df, partitionColumnNames)
+    }     
 }

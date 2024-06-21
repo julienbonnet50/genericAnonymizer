@@ -10,6 +10,8 @@ val targetFormat                = ""
 val targetDelimiter             = ""
 val targetHeader                = ""
 val targetReferentialPath       = ""
+val targetMaxRows               = ""
+
 
 val compression                 = "gzip"
 val partitionBy                 = ""
@@ -21,6 +23,7 @@ val sha256KeepSourceLength      = "true"
 val sha256MinLength             = "8"
 val excludeColNames             = ""
 val excludeTypeNames            = ""
+
 
 val byteKeyFactor               = Anonymizer.generateKeyFactor().toString
 val floatKeyFactor              = Anonymizer.generateKeyFactor().toString
@@ -53,7 +56,10 @@ val confArray: Array[String] = Array(
     "--target-delimiter", targetDelimiter,
     "--target-header", targetHeader,
     "--target-referential-path", targetReferentialPath,
+    "--target-max-rows", targetMaxRows,
+
     "--partition-by", partitionBy,
+    "--partition-num", partitionNum,
 
     /* Anonymizer */
         /* Principals param */

@@ -99,7 +99,8 @@ Most of the properties that control internal settings have reasonable default va
 | targetDelimiter              | ,                              | Delimiter between columns (mainly for CSV) of target dataset   | 0.1   
 | targetFormat                 | (none)                         | File format of your target dataset                             | 0.1    
 | targetBasePath               | (none)                         | Path of your spark basePath option of target dataset           | 0.1 
-| targetReferentialPath        | /sample/output/referential     | Path of referential                                            | 0.1     
+| targetReferentialPath        | /sample/output/referential     | Path of referential                                            | 0.1   
+| targetMaxRows                | 0 (None)                       | Number of first rows you read from source (0 = all rows)       | 0.1
 | encoding                     | (none)                         | Encoding value for spark option                                | 0.1     
 | compression                  | gzip                           | Compression value for spark option                             | 0.1
 | partitionBy                  | (none)                         | Columns to parition your dataset                               | 0.1
