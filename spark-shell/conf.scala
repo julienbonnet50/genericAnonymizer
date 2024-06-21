@@ -56,7 +56,7 @@ val confArray: Array[String] = Array(
     "--target-delimiter", targetDelimiter,
     "--target-header", targetHeader,
     "--target-referential-path", targetReferentialPath,
-    "--target-max-rows", targetMaxRows,
+    // "--target-max-rows", targetMaxRows,
 
     "--partition-by", partitionBy,
     "--partition-num", partitionNum,

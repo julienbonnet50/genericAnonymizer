@@ -63,6 +63,7 @@ Referential is written to keep numeric factor and metadata of anonymization
 {"conf":"targetFormat","value":"csv"}
 {"conf":"targetDelimiter","value":""}
 {"conf":"targetPath","value":"./sample/output/iris.csv"}
+{"conf":"targetMaxRows","value":"10"}
 {"conf":"encoding","value":""}
 {"conf":"saveMode","value":"overwrite"}
 {"conf":"compression","value":"gzip"}
